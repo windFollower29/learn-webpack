@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 import 'antd/dist/antd.css'
 
-import { observable, computed, action, set } from 'mobx'
+import { observable, computed, action, set, toJS } from 'mobx'
 import { observer } from 'mobx-react'
 
 import cloneDeep from 'lodash/cloneDeep'
@@ -26,25 +26,25 @@ let CATEGORY = [
   {
     key: '0',
     title: '0',
-    // hover: false,
+    hover: false,
     children: [
       {
-        // hover: false,
+        hover: false,
         key: '0-0',
         title: '0-0'
       },
       {
-        // hover: false,
+        hover: false,
         key: '0-1',
         title: '0-1',
         children: [
           {
-            // hover: false,
+            hover: false,
             key: '0-1-0',
             title: '0-1-0',
           },
           {
-            // hover: false,
+            hover: false,
             key: '0-1-1',
             title: '0-1-1'
           }
@@ -87,7 +87,7 @@ const deepFind = (key, data = [], cb) => {
 
 class Store {
 
-  @observable state = {
+  @observable.shallow state = {
     category: CATEGORY
   }
 
@@ -229,6 +229,10 @@ const store = new Store
 @observer
 export default class Category extends Component {
 
+  state = {
+    category: CATEGORY
+  }
+
   render() {
 
     const {
@@ -272,13 +276,18 @@ export default class Category extends Component {
       )
     }
 
+    const Icon = props => (
+      <span>我是icon</span>
+    )
+
     const loop = data => data.map((item, idx) => {
       if (item && item.children && item.children.length) {
 
         return (
           <TreeNode 
-            title={item.title}
-            // title={<TreeNodeDom show={item.hover} title={item.title} />}
+            // icon={<Icon />}
+            // title={item.title}
+            title={<TreeNodeDom show={item.hover} title={item.title} />}
             key={item.key || item.title}>
             {loop(item.children)}
           </TreeNode>
@@ -287,11 +296,9 @@ export default class Category extends Component {
 
       return (
         <TreeNode
-          title={item.title}
-          // title={<TreeNodeDom show={item.hover} title={item.title} />}
-          key={item.key || item.title}>
-          <div>hh</div>
-        </TreeNode>
+          // title={item.title}
+          title={<TreeNodeDom show={item.hover} title={item.title} />}
+          key={item.key || item.title} />
       )
     })
 
@@ -305,7 +312,9 @@ export default class Category extends Component {
             header={header}>
             <div>
               <Tree
+                // icon={<Icon />}
                 showLine
+                // showIcon
                 onDrop={this.onDrop}
                 onMouseEnter={this.onMouseEnter}
                 onMouseLeave={this.onMouseLeave}
@@ -313,7 +322,8 @@ export default class Category extends Component {
                 draggable
 
               >
-                {loop(category)}
+                {/* {loop(this.state.category)} */}
+                {loop(store.state.category)}
               </Tree>
             </div>
           </Panel>
@@ -405,15 +415,15 @@ export default class Category extends Component {
   // }
 
   onDrop = info => {
-    console.log('onDrop', info)
+    // console.log('onDrop', info)
     
-    const dropKey = info.node.props.title;
-    const dragKey = info.dragNode.props.title;
-    // const dropKey = info.node.props.eventKey;
-    // const dragKey = info.dragNode.props.eventKey;
+    // const dropKey = info.node.props.title;
+    // const dragKey = info.dragNode.props.title;
+    const dropKey = info.node.props.eventKey;
+    const dragKey = info.dragNode.props.eventKey;
     const dropPos = info.node.props.pos.split('-');
     const dropPosition = info.dropPosition - Number(dropPos[dropPos.length - 1]);
-
+console.log('drop: ', dropKey, dragKey, dropPos, dropPosition)
     const loop = (data, key, callback) => {
       data.forEach((item, index, arr) => {
         if (item.key === key) {
@@ -426,7 +436,10 @@ export default class Category extends Component {
       });
     };
     // const data = [...store.state.category.slice()];
-    const data = [...store.state.category];
+    let js = store.state.category
+    // console.log('js', js)
+    const data = [...js];
+    // const data = [...this.state.category];
     // const data = cloneDeep(store.state.category.slice())
     // Find dragObject
     let dragObj;
@@ -435,7 +448,7 @@ export default class Category extends Component {
       dragObj = item;
     });
 
-    console.log('减去', data)
+    // console.log('减去', data)
 
     if (!info.dropToGap) {
       // Drop on the content
@@ -479,6 +492,9 @@ export default class Category extends Component {
     }
 
     store.updateCategory(data)
+    // this.setState({
+    //   category: data
+    // })
   }
 
   onMouseEnter = (info) => {
