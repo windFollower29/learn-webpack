@@ -7,7 +7,7 @@ const App = props => {
   
   return (
     <div>
-      hello world---
+      hello world+++
       <Hmr />
     </div>
   )
